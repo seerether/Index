@@ -1,0 +1,26 @@
+function raiseAssetTargets(ISetToken _setToken) external onlyAllowedBidder(_setToken) {
+    require(!_isRebalanceDurationElapsed(_setToken), "Rebalance must be in progress");
+
+    require(_canRaiseAssetTargets(_setToken), "Targets not met or quote asset =~ 0");
+
+    // Get the current excess quote asset balance
+    uint256 excessQuoteBalance = _getDefaultPositionRealUnit(_setToken, rebalanceInfo[_setToken].quoteAsset)
+        .sub(_getNormalizedTargetUnit(_setToken, rebalanceInfo[_setToken].quoteAsset))
+        .preciseMulCeil(_setToken.totalSupply());
+
+    // Get the desired increase in target units
+    uint256 newPositionMultiplier = rebalanceInfo[_setToken].positionMultiplier.preciseDiv(
+        PreciseUnitMath.preciseUnit().add(rebalanceInfo[_setToken].raiseTargetPercentage)
+    );
+
+    // Calculate the maximum quote asset balance that can be used without exceeding the excess
+    uint256 maxQuoteBalance = excessQuoteBalance.preciseDiv(newPositionMultiplier).preciseDivCeil(PreciseUnitMath.preciseUnit());
+
+    // Check if the increase in target units will result in an excessive amount of quote asset being used
+    require(maxQuoteBalance >= 0, "Excessive quote asset usage");
+
+    // Update the position multiplier with the new target units
+    rebalanceInfo[_setToken].positionMultiplier = newPositionMultiplier;
+
+    emit AssetTargetsRaised(_setToken, newPositionMultiplier);
+}
