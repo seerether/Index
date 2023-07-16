@@ -1,0 +1,29 @@
+contract AuctionRebalanceModuleV1 is ModuleBase, ReentrancyGuard {
+    // ...
+
+    mapping(ISetToken => bool) public assetTargetsRaised;  // New mapping to track if asset targets have been raised
+
+    // ...
+
+    function raiseAssetTargets(ISetToken _setToken)
+        external
+        onlyAllowedBidder(_setToken)
+        virtual
+    {
+        require(!_isRebalanceDurationElapsed(_setToken), "Rebalance must be in progress");
+        require(_canRaiseAssetTargets(_setToken), "Targets not met or quote asset =~ 0");
+
+        require(!assetTargetsRaised[_setToken], "Asset targets already raised");  // Check if asset targets have already been raised
+        assetTargetsRaised[_setToken] = true;  // Set the asset targets as raised
+
+        uint256 newPositionMultiplier = rebalanceInfo[_setToken].positionMultiplier.preciseDiv(
+            PreciseUnitMath.preciseUnit().add(rebalanceInfo[_setToken].raiseTargetPercentage)
+        );
+
+        rebalanceInfo[_setToken].positionMultiplier = newPositionMultiplier;
+
+        emit AssetTargetsRaised(_setToken, newPositionMultiplier);
+    }
+
+    // ...
+}
