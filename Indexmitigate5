@@ -1,0 +1,11 @@
+function removeModule() external override {
+    BidPermissionInfo storage tokenPermissionInfo = permissionInfo[ISetToken(msg.sender)];
+
+    for (uint256 i = 0; i < tokenPermissionInfo.biddersHistory.length; i++) {
+        tokenPermissionInfo.bidAllowList[tokenPermissionInfo.biddersHistory[i]] = false;
+    }
+
+    delete rebalanceInfo[ISetToken(msg.sender)];
+    delete permissionInfo[ISetToken(msg.sender)];
+    delete executionInfo[ISetToken(msg.sender)];  // Delete the execution info for the SetToken
+}
