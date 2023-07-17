@@ -1,0 +1,22 @@
+function _createBidInfo(
+    ISetToken _setToken,
+    IERC20 _component,
+    uint256 _componentQuantity,
+    uint256 _quoteQuantityLimit
+) internal view returns (BidInfo memory bidInfo) {
+    // ...
+
+    // Get the pre-bid token sent balance
+    bidInfo.preBidTokenSentBalance = bidInfo.sendToken.balanceOf(address(_setToken));
+
+    // Ensure that the _quoteQuantityLimit is not greater than the preBidTokenSentBalance
+    require(
+        _quoteQuantityLimit <= bidInfo.preBidTokenSentBalance,
+        "Quote quantity limit exceeds token balance"
+    );
+
+    // ...
+
+    // Return the modified BidInfo struct
+    return bidInfo;
+}
